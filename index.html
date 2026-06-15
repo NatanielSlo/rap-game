@@ -1212,6 +1212,10 @@
             }
         }
 
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && running) stopAll();
+        });
+
         function toggleGame() {
             if (running) { stopAll(); return; }
             if (isLimited()) { showModal('modalLimit'); return; }
