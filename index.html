@@ -675,7 +675,7 @@
         let stepTimer = null, running = false;
         let beatBpm = 100, firstBeat = 0, beatDurSec = 60 / 100;
 
-        let libraryBeats = [], selectedBeat = null, dailyBeatId = null;
+        let libraryBeats = [], selectedBeat = null, dailyBeatId = null, dailyOverride = null;
 
         const gridScroll = document.getElementById('gridScroll');
         const dot        = document.getElementById('dot');
@@ -718,11 +718,20 @@
 
         async function loadTodayBeat() {
             try {
-                libraryBeats = await fetch('library_index.json').then(r => r.json());
+                const raw = await fetch('library_index.json').then(r => r.json());
+                if (Array.isArray(raw)) {
+                    libraryBeats = raw;
+                    dailyOverride = null;
+                } else {
+                    libraryBeats = raw.beats || [];
+                    dailyOverride = raw.daily_override || null;
+                }
             } catch { libraryBeats = []; }
 
             if (libraryBeats.length > 0) {
-                const beat = libraryBeats[dailyIndex(libraryBeats)];
+                const beat = dailyOverride
+                    ? (libraryBeats.find(b => b.id === dailyOverride) || libraryBeats[dailyIndex(libraryBeats)])
+                    : libraryBeats[dailyIndex(libraryBeats)];
                 dailyBeatId = beat.id;
                 await loadLibraryBeat(beat);
                 return;

@@ -1,37 +1,40 @@
-[
-  {
-    "id": "free-90s-old-school-boom-bap-type-beat-x-freestyle-hip-hop-instrumental-the-supply",
-    "title": "(free) 90s Old School Boom Bap type beat x Freestyle Hip hop instrumental  The Supply",
-    "bpm": 87.593,
-    "info": "library/free-90s-old-school-boom-bap-type-beat-x-freestyle-hip-hop-instrumental-the-supply.json",
-    "audio": "library/(free) 90s Old School Boom Bap type beat x Freestyle Hip hop instrumental  The Supply.mp3"
-  },
-  {
-    "id": "concrete-riddles-1",
-    "title": "Concrete Riddles (1)",
-    "bpm": 100.446,
-    "info": "library/concrete-riddles-1.json",
-    "audio": "library/Concrete Riddles (1).mp3"
-  },
-  {
-    "id": "concrete-riddles",
-    "title": "Concrete Riddles",
-    "bpm": 98.684,
-    "info": "library/concrete-riddles.json",
-    "audio": "library/Concrete Riddles.mp3"
-  },
-  {
-    "id": "loop-city-cipher-1",
-    "title": "Loop City Cipher (1)",
-    "bpm": 96.983,
-    "info": "library/loop-city-cipher-1.json",
-    "audio": "library/Loop City Cipher (1).mp3"
-  },
-  {
-    "id": "loop-city-cipher",
-    "title": "Loop City Cipher",
-    "bpm": 96.983,
-    "info": "library/loop-city-cipher.json",
-    "audio": "library/Loop City Cipher.mp3"
-  }
-]
+{
+  "beats": [
+    {
+      "id": "free-90s-old-school-boom-bap-type-beat-x-freestyle-hip-hop-instrumental-the-supply",
+      "title": "(free) 90s Old School Boom Bap type beat x Freestyle Hip hop instrumental  The Supply",
+      "bpm": 87.593,
+      "info": "library/free-90s-old-school-boom-bap-type-beat-x-freestyle-hip-hop-instrumental-the-supply.json",
+      "audio": "library/(free) 90s Old School Boom Bap type beat x Freestyle Hip hop instrumental  The Supply.mp3"
+    },
+    {
+      "id": "concrete-riddles-1",
+      "title": "Concrete Riddles (1)",
+      "bpm": 100.446,
+      "info": "library/concrete-riddles-1.json",
+      "audio": "library/Concrete Riddles (1).mp3"
+    },
+    {
+      "id": "concrete-riddles",
+      "title": "Concrete Riddles",
+      "bpm": 98.684,
+      "info": "library/concrete-riddles.json",
+      "audio": "library/Concrete Riddles.mp3"
+    },
+    {
+      "id": "loop-city-cipher-1",
+      "title": "Loop City Cipher (1)",
+      "bpm": 96.983,
+      "info": "library/loop-city-cipher-1.json",
+      "audio": "library/Loop City Cipher (1).mp3"
+    },
+    {
+      "id": "loop-city-cipher",
+      "title": "Loop City Cipher",
+      "bpm": 96.983,
+      "info": "library/loop-city-cipher.json",
+      "audio": "library/Loop City Cipher.mp3"
+    }
+  ],
+  "daily_override": "concrete-riddles-1"
+}
