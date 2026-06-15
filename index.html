@@ -279,6 +279,44 @@
             font-size: 3rem;
             text-align: center;
         }
+
+        /* ---- beat picker ---- */
+        .modal-wide { max-width: 560px; }
+
+        .beat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 52vh;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .beat-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            gap: 1rem;
+        }
+        .beat-item:hover { background: #333; border-color: #666; }
+        .beat-item.selected { border-color: #c49a00; }
+        .beat-item-title { font-weight: bold; font-size: 0.95rem; }
+        .beat-item-meta { color: #888; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 2px; }
+        .beat-daily-badge {
+            font-size: 0.7rem;
+            background: #1a2e12;
+            border: 1px solid #3a8c32;
+            color: #7ee870;
+            border-radius: 4px;
+            padding: 1px 6px;
+            white-space: nowrap;
+        }
+        .beat-list-empty { color: #666; text-align: center; padding: 1.5rem; }
     </style>
 </head>
 <body>
@@ -370,6 +408,19 @@
             <div class="modal-actions">
                 <button id="paywallCta" onclick="paywallCtaClick()">Odblokuj za 9 zł</button>
                 <button class="btn-secondary" onclick="hideModal('modalPaywall')">Nie teraz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ BEAT PICKER MODAL ══ -->
+    <div class="overlay hidden" id="modalBeatPicker">
+        <div class="modal modal-wide">
+            <button class="btn-close" onclick="hideModal('modalBeatPicker')">✕</button>
+            <h2>🎵 Biblioteka beatów</h2>
+            <p>Każdego dnia losowany jest nowy beat. Możesz też wybrać własny.</p>
+            <div id="beatList" class="beat-list"></div>
+            <div class="modal-actions" style="margin-top:0.25rem">
+                <button class="btn-secondary" onclick="hideModal('modalBeatPicker')">Zamknij</button>
             </div>
         </div>
     </div>
@@ -484,8 +535,7 @@
 
         function premiumAction(feature) {
             if (isPaid()) {
-                // już opłacone — obsłuż akcję
-                if (feature === 'beat') alert('Zmiana beatu — wkrótce!');
+                if (feature === 'beat') openBeatPicker();
                 if (feature === 'ads')  alert('Reklamy wyłączone!');
                 return;
             }
@@ -625,6 +675,8 @@
         let stepTimer = null, running = false;
         let beatBpm = 100, firstBeat = 0, beatDurSec = 60 / 100;
 
+        let libraryBeats = [], selectedBeat = null, dailyBeatId = null;
+
         const gridScroll = document.getElementById('gridScroll');
         const dot        = document.getElementById('dot');
         const btn        = document.getElementById('btn');
@@ -643,19 +695,88 @@
             await new Promise(res => { audio.oncanplaythrough = res; audio.load(); });
         }
 
+        async function loadLibraryBeat(beat) {
+            const info = await fetch(beat.info).then(r => r.json()).catch(() => null);
+            if (info) {
+                beatBpm    = info.bpm;
+                firstBeat  = info.first_beat;
+                beatDurSec = 60 / beatBpm;
+            }
+            selectedBeat = beat;
+            document.getElementById('status').textContent =
+                `${info?.title || beat.title || ''} · ${beatBpm.toFixed(1)} BPM`;
+            audio.src = beat.audio;
+            await new Promise(res => { audio.oncanplaythrough = res; audio.load(); });
+        }
+
+        function dailyIndex(beats) {
+            const dateStr = new Date().toISOString().slice(0, 10);
+            let hash = 0;
+            for (const c of dateStr) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
+            return hash % beats.length;
+        }
+
         async function loadTodayBeat() {
-            const today = new Date().toISOString().slice(0, 10);
             try {
+                libraryBeats = await fetch('library_index.json').then(r => r.json());
+            } catch { libraryBeats = []; }
+
+            if (libraryBeats.length > 0) {
+                const beat = libraryBeats[dailyIndex(libraryBeats)];
+                dailyBeatId = beat.id;
+                await loadLibraryBeat(beat);
+                return;
+            }
+
+            // fallback: stary beats_index.json
+            try {
+                const today = new Date().toISOString().slice(0, 10);
                 const index = await fetch('beats_index.json').then(r => r.json());
-                // szukaj dzisiejszego, fallback na najnowszy
                 const entry = index.find(b => b.date === today) || index[0];
                 if (entry) {
                     await loadBeat(entry.info, entry.info.replace('.json', '.mp3'));
                     return;
                 }
             } catch {}
-            // fallback na stare pliki
             await loadBeat('beat_info.json', 'beat.mp3').catch(() => {});
+        }
+
+        function openBeatPicker() {
+            renderBeatList();
+            showModal('modalBeatPicker');
+        }
+
+        function renderBeatList() {
+            const el = document.getElementById('beatList');
+            if (libraryBeats.length === 0) {
+                el.innerHTML = '<div class="beat-list-empty">Brak beatów w bibliotece.</div>';
+                return;
+            }
+            el.innerHTML = '';
+            libraryBeats.forEach(beat => {
+                const isSelected = selectedBeat?.id === beat.id;
+                const isDaily    = beat.id === dailyBeatId;
+                const item = document.createElement('div');
+                item.className = 'beat-item' + (isSelected ? ' selected' : '');
+                item.innerHTML = `
+                    <div>
+                        <div class="beat-item-title">${beat.title}</div>
+                        <div class="beat-item-meta">
+                            ${beat.bpm.toFixed(1)} BPM
+                            ${isDaily ? '<span class="beat-daily-badge">Dzisiejszy</span>' : ''}
+                        </div>
+                    </div>
+                    <div style="color:#c49a00;font-size:1rem">${isSelected ? '▶' : ''}</div>
+                `;
+                item.onclick = () => selectLibraryBeat(beat);
+                el.appendChild(item);
+            });
+        }
+
+        async function selectLibraryBeat(beat) {
+            if (running) stopAll();
+            await loadLibraryBeat(beat);
+            hideModal('modalBeatPicker');
         }
 
         Promise.all([
