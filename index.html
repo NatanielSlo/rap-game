@@ -485,7 +485,7 @@
 
         function updateCounter() {
             const el = document.getElementById('rowCounter');
-            if (currentUser) { el.classList.add('hidden'); return; }
+            if (isPaid()) { el.classList.add('hidden'); return; }
             const n = getRowsToday();
             el.classList.remove('hidden', 'warning', 'danger');
             el.innerHTML = `linijek: <span>${n}</span> / ${DAILY_LIMIT()}`;
@@ -512,7 +512,7 @@
         // ══════════════════════════════════════════
 
         // Stripe Payment Link — wklej swój link z Stripe Dashboard
-        const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_bJe8wR72J4sAfgmbec8ww00';
+        const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/5kQcN787o1UX0MQevWfAc00';
 
         const PREMIUM_FEATURES = {
             beat: {
