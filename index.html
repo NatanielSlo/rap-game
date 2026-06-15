@@ -967,6 +967,10 @@
             await new Promise(res => { audio.oncanplaythrough = res; audio.load(); });
         }
 
+        function encodeAudioPath(path) {
+            return path.split('/').map(encodeURIComponent).join('/');
+        }
+
         async function loadLibraryBeat(beat) {
             const info = await fetch(beat.info).then(r => r.json()).catch(() => null);
             if (info) {
@@ -977,8 +981,13 @@
             selectedBeat = beat;
             document.getElementById('status').textContent =
                 `${info?.title || beat.title || ''} · ${beatBpm.toFixed(1)} BPM`;
-            audio.src = beat.audio;
-            await new Promise(res => { audio.oncanplaythrough = res; audio.load(); });
+            audio.src = encodeAudioPath(beat.audio);
+            await new Promise(res => {
+                audio.oncanplaythrough = res;
+                audio.onerror = res;
+                audio.load();
+                setTimeout(res, 6000);
+            });
         }
 
         function dailyIndex(beats) {
@@ -1156,11 +1165,12 @@
 
         function scheduleNext() {
             if (!running) return;
+            if (audio.paused) { stopAll(); return; }
             const now      = audio.currentTime;
             const elapsed  = now - firstBeat;
             const nextBeat = Math.ceil(elapsed / beatDurSec + 0.02);
             const delay    = (firstBeat + nextBeat * beatDurSec - now) * 1000;
-            stepTimer = setTimeout(step, Math.max(0, delay));
+            stepTimer = setTimeout(step, Math.max(50, delay));
         }
 
         function waitForFirstBeat() {
@@ -1172,15 +1182,19 @@
 
         function stopAll() {
             clearTimeout(stepTimer);
+            running = false;
             audio.pause();
             audio.currentTime = 0;
             if (cells[currentCell - 1]) cells[currentCell - 1].classList.remove('active');
             dot.classList.add('dim');
             btn.textContent = 'START';
             btn.classList.remove('running');
-            running = false;
             initGrid();
         }
+
+        audio.addEventListener('pause', () => {
+            if (running) stopAll();
+        });
 
         // ══════════════════════════════════════════
         // SHARE
@@ -1224,7 +1238,7 @@
             btn.classList.add('running');
             initGrid();
             audio.currentTime = 0;
-            audio.play();
+            audio.play().catch(() => stopAll());
             waitForFirstBeat();
         }
     </script>
