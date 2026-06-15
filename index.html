@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Gra w Rymy</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,8 +18,72 @@
             min-height: 100vh;
             gap: 1.1rem;
             padding: 2rem;
+            padding-top: 4rem;
         }
 
+        /* ---- top bar ---- */
+        .topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 48px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            z-index: 10;
+        }
+        .topbar-title { font-weight: bold; letter-spacing: 2px; font-size: 0.9rem; }
+        .topbar-right { display: flex; align-items: center; gap: 1rem; }
+
+        .row-counter {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .row-counter span { color: #fff; font-weight: bold; }
+        .row-counter.warning span:first-child { color: #f5c800; }
+        .row-counter.danger span:first-child { color: #e55; }
+
+        .auth-btn {
+            padding: 5px 14px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #fff;
+            letter-spacing: 0;
+        }
+        .auth-btn:hover { background: #333; }
+        .auth-btn.logged-in { border-color: #3a8c32; color: #7ee870; }
+
+        .topbar-premium {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .premium-btn {
+            padding: 5px 12px;
+            font-size: 0.78rem;
+            font-weight: bold;
+            background: #1a1a1a;
+            border: 1px solid #555;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #ccc;
+            letter-spacing: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .premium-btn:hover { background: #252525; border-color: #888; color: #fff; }
+        .premium-btn .lock { font-size: 0.7rem; opacity: 0.6; }
+        .premium-btn.unlocked { border-color: #c49a00; color: #f5c800; }
+        .premium-btn.unlocked .lock { display: none; }
+
+        /* ---- main layout ---- */
         h1 { font-size: 2rem; letter-spacing: 2px; }
 
         .desc {
@@ -39,13 +104,13 @@
         }
         .indicator.dim { opacity: 0.12; }
 
+        /* ---- grid ---- */
         .viewport {
             width: calc(4 * 150px + 3 * 8px);
             height: calc(6 * 64px + 5 * 8px);
             overflow: hidden;
             position: relative;
         }
-
         .grid-scroll {
             position: absolute;
             top: 0; left: 0; right: 0;
@@ -55,14 +120,12 @@
             transition: transform 0.35s ease;
             will-change: transform;
         }
-
         .grid-row {
             display: grid;
             grid-template-columns: repeat(4, 150px);
             gap: 8px;
             flex-shrink: 0;
         }
-
         .cell {
             height: 64px;
             border-radius: 6px;
@@ -74,26 +137,13 @@
             border: 2px solid transparent;
             text-transform: lowercase;
         }
-
-        .blank {
-            background: #2a2a2a;
-            border-color: #444;
-        }
-
-        .cell.active {
-            border-color: #fff !important;
-            box-shadow: 0 0 18px rgba(255, 255, 255, 0.75);
-        }
+        .blank { background: #2a2a2a; border-color: #444; }
+        .cell.active { border-color: #fff !important; box-shadow: 0 0 18px rgba(255,255,255,0.75); }
         .blank.active { background: #484848; }
+        .blank.passed { background: #363636; border-color: #5a5a5a; }
+        .cell.passed:not(.blank) { opacity: 0.45; }
 
-        .blank.passed {
-            background: #363636;
-            border-color: #5a5a5a;
-        }
-        .cell.passed:not(.blank) {
-            opacity: 0.45;
-        }
-
+        /* ---- buttons ---- */
         button {
             padding: 12px 48px;
             font-size: 1.2rem;
@@ -108,15 +158,149 @@
         button.running:hover { background: #ab3e3e; }
         button:disabled { background: #555; cursor: default; }
 
-        #status {
-            font-size: 0.85rem;
+        #status { font-size: 0.85rem; color: #555; min-height: 1.2rem; }
+
+        /* ---- modals ---- */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 1rem;
+        }
+        .overlay.hidden { display: none; }
+
+        .modal {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            max-width: 480px;
+            width: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal h2 { font-size: 1.5rem; }
+        .modal p { color: #aaa; line-height: 1.6; font-size: 0.95rem; }
+        .modal p strong { color: #fff; }
+
+        .modal-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .modal-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        .modal-step-num {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: #333;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+        .modal-actions button {
+            padding: 12px;
+            font-size: 1rem;
+            letter-spacing: 0;
+        }
+        .btn-secondary {
+            background: #2a2a2a !important;
+            border: 1px solid #444;
+            color: #aaa !important;
+        }
+        .btn-secondary:hover { background: #333 !important; }
+
+        .btn-close {
+            position: absolute;
+            top: 1rem; right: 1rem;
+            background: none !important;
+            border: none;
             color: #666;
+            font-size: 1.2rem;
+            padding: 4px 8px !important;
+            cursor: pointer;
+            letter-spacing: 0;
+            min-width: unset;
+        }
+        .btn-close:hover { color: #fff !important; background: none !important; }
+
+        /* ---- auth form ---- */
+        .auth-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+        }
+        .auth-input:focus { border-color: #3a8c32; }
+
+        .auth-error {
+            color: #e55;
+            font-size: 0.85rem;
             min-height: 1.2rem;
-            letter-spacing: 0.5px;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            color: #666;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 0.25rem;
+        }
+        .auth-toggle span { color: #7ee870; text-decoration: underline; }
+
+        .limit-badge {
+            font-size: 3rem;
+            text-align: center;
         }
     </style>
 </head>
 <body>
+
+    <!-- top bar -->
+    <div class="topbar">
+        <span class="topbar-title">GRA W RYMY</span>
+        <div class="topbar-right">
+            <div class="topbar-premium">
+                <button class="premium-btn" id="btnChangeBeat" onclick="premiumAction('beat')">
+                    <span class="lock">🔒</span> Zmień beat
+                </button>
+                <button class="premium-btn" id="btnNoAds" onclick="premiumAction('ads')">
+                    <span class="lock">🔒</span> Usuń reklamy
+                </button>
+            </div>
+            <span class="row-counter hidden" id="rowCounter"></span>
+            <button class="auth-btn" id="authBtn" onclick="openAuth()">Zaloguj się</button>
+        </div>
+    </div>
+
+    <!-- main -->
     <h1>GRA W RYMY</h1>
     <p class="desc">
         Na <strong>pustych polach</strong> — improwizuj!&nbsp;
@@ -135,77 +319,373 @@
 
     <audio id="audio" src="beat.mp3"></audio>
 
+    <!-- ══ TUTORIAL MODAL ══ -->
+    <div class="overlay" id="modalTutorial">
+        <div class="modal">
+            <h2>Jak grać?</h2>
+            <div class="modal-steps">
+                <div class="modal-step">
+                    <div class="modal-step-num">1</div>
+                    <div>Kliknij <strong>START</strong> — beat zaczyna grać, kursor przesuwa się przez kratki w rytmie.</div>
+                </div>
+                <div class="modal-step">
+                    <div class="modal-step-num">2</div>
+                    <div>Na <strong>szarych polach</strong> improwizuj — powiedz cokolwiek, co ci przyjdzie do głowy.</div>
+                </div>
+                <div class="modal-step">
+                    <div class="modal-step-num">3</div>
+                    <div>Na <strong>kolorowych polach</strong> powiedz dane słowo głośno w rytmie.</div>
+                </div>
+                <div class="modal-step">
+                    <div class="modal-step-num">4</div>
+                    <div>Co dwa wiersze — słowa się rymują. Staraj się płynnie połączyć improwizację z rymem!</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeTutorial()">Rozumiem, gramy!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ LIMIT MODAL ══ -->
+    <div class="overlay hidden" id="modalLimit">
+        <div class="modal">
+            <div class="limit-badge">🎤</div>
+            <h2>Koniec na dziś!</h2>
+            <p>Wyrobiłeś swoje <strong>30 linijek</strong> na dziś — nieźle! Wróć jutro po więcej, albo zarejestruj się żeby zwiększyć limit do <strong>100 linijek</strong> dziennie.</p>
+            <div class="modal-actions">
+                <button onclick="hideModal('modalLimit'); openAuth('register')">Zarejestruj się za darmo</button>
+                <button class="btn-secondary" onclick="hideModal('modalLimit')">Wrócę jutro</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PAYWALL MODAL ══ -->
+    <div class="overlay hidden" id="modalPaywall">
+        <div class="modal">
+            <button class="btn-close" onclick="hideModal('modalPaywall')">✕</button>
+            <div class="limit-badge" id="paywallIcon">⭐</div>
+            <h2 id="paywallTitle">Funkcja premium</h2>
+            <p id="paywallDesc"></p>
+            <div class="modal-actions">
+                <button id="paywallCta" onclick="paywallCtaClick()">Odblokuj za 9 zł</button>
+                <button class="btn-secondary" onclick="hideModal('modalPaywall')">Nie teraz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ AUTH MODAL ══ -->
+    <div class="overlay hidden" id="modalAuth">
+        <div class="modal">
+            <button class="btn-close" onclick="hideModal('modalAuth')">✕</button>
+            <h2 id="authTitle">Rejestracja</h2>
+            <p id="authSubtitle">Graj bez limitu i śledź swoje postępy.</p>
+            <input class="auth-input" type="email" id="authEmail" placeholder="Email" />
+            <input class="auth-input" type="password" id="authPassword" placeholder="Hasło (min. 6 znaków)" />
+            <div class="auth-error" id="authError"></div>
+            <div class="modal-actions">
+                <button id="authSubmit" onclick="submitAuth()">Zarejestruj się</button>
+            </div>
+            <p class="auth-toggle" id="authToggle" onclick="toggleAuthMode()">
+                Masz już konto? <span>Zaloguj się</span>
+            </p>
+        </div>
+    </div>
+
     <script>
+        // ══════════════════════════════════════════
+        // SUPABASE — wklej swoje dane z supabase.com
+        // ══════════════════════════════════════════
+        const SUPABASE_URL      = 'https://jexmqozhplyddyupeaxl.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_-qMhTqpHlQQbyVwsq4tTVA_AUo1WRP_';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
+
+        sb.auth.onAuthStateChange((_, session) => {
+            currentUser = session?.user || null;
+            updateUserUI();
+        });
+
+        // ══════════════════════════════════════════
+        // ROW LIMIT
+        // ══════════════════════════════════════════
+        function DAILY_LIMIT() { return currentUser ? 100 : 30; }
+        const STORAGE_KEY  = 'rap_rows';
+
+        function todayKey() { return new Date().toISOString().slice(0, 10); }
+
+        function getRowsToday() {
+            try {
+                const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                return d.date === todayKey() ? (d.count || 0) : 0;
+            } catch { return 0; }
+        }
+
+        function addRow() {
+            const count = getRowsToday() + 1;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: todayKey(), count }));
+            updateCounter();
+            return count;
+        }
+
+        function isLimited() {
+            return !currentUser && getRowsToday() >= DAILY_LIMIT();
+        }
+
+        function updateCounter() {
+            const el = document.getElementById('rowCounter');
+            if (currentUser) { el.classList.add('hidden'); return; }
+            const n = getRowsToday();
+            el.classList.remove('hidden', 'warning', 'danger');
+            el.innerHTML = `linijek: <span>${n}</span> / ${DAILY_LIMIT()}`;
+            if (n >= DAILY_LIMIT())     el.classList.add('danger');
+            else if (n >= DAILY_LIMIT() * 0.7) el.classList.add('warning');
+        }
+
+        // ══════════════════════════════════════════
+        // TUTORIAL
+        // ══════════════════════════════════════════
+        function closeTutorial() {
+            localStorage.setItem('rap_tutorial', '1');
+            hideModal('modalTutorial');
+        }
+
+        if (!localStorage.getItem('rap_tutorial')) {
+            document.getElementById('modalTutorial').classList.remove('hidden');
+        } else {
+            hideModal('modalTutorial');
+        }
+
+        // ══════════════════════════════════════════
+        // PREMIUM
+        // ══════════════════════════════════════════
+
+        // Stripe Payment Link — wklej swój link z Stripe Dashboard
+        const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_bJe8wR72J4sAfgmbec8ww00';
+
+        const PREMIUM_FEATURES = {
+            beat: {
+                icon: '🎵',
+                title: 'Zmień beat',
+                desc: 'Wybieraj spośród wielu beatów — boom bap, trap, lo-fi i inne. Każdy w rytmie dopasowanym do gry.',
+            },
+            ads: {
+                icon: '✨',
+                title: 'Usuń reklamy',
+                desc: 'Graj bez przerw i banerów. Czyste środowisko, pełna koncentracja na rymach.',
+            },
+        };
+
+        let currentPremiumAction = null;
+
+        function isPaid() {
+            return currentUser?.user_metadata?.paid === true;
+        }
+
+        function premiumAction(feature) {
+            if (isPaid()) {
+                // już opłacone — obsłuż akcję
+                if (feature === 'beat') alert('Zmiana beatu — wkrótce!');
+                if (feature === 'ads')  alert('Reklamy wyłączone!');
+                return;
+            }
+
+            currentPremiumAction = feature;
+            const f = PREMIUM_FEATURES[feature];
+            document.getElementById('paywallIcon').textContent  = f.icon;
+            document.getElementById('paywallTitle').textContent = f.title;
+            document.getElementById('paywallDesc').textContent  = f.desc;
+
+            if (!currentUser) {
+                document.getElementById('paywallCta').textContent = 'Zaloguj się, żeby odblokować';
+            } else {
+                document.getElementById('paywallCta').textContent = 'Odblokuj za 9 zł';
+            }
+
+            showModal('modalPaywall');
+        }
+
+        function paywallCtaClick() {
+            hideModal('modalPaywall');
+            if (!currentUser) {
+                openAuth('register');
+            } else {
+                // redirect do Stripe z user email jako prefill
+                const url = STRIPE_PAYMENT_LINK
+                    + '?prefilled_email=' + encodeURIComponent(currentUser.email)
+                    + '&client_reference_id=' + currentUser.id;
+                window.location.href = url;
+            }
+        }
+
+        function updatePremiumUI() {
+            const paid = isPaid();
+            ['btnChangeBeat', 'btnNoAds'].forEach(id => {
+                document.getElementById(id)?.classList.toggle('unlocked', paid);
+            });
+        }
+
+        // sprawdź po powrocie ze Stripe (?payment=success)
+        if (new URLSearchParams(location.search).get('payment') === 'success') {
+            sb.auth.refreshSession().then(() => updatePremiumUI());
+        }
+
+        // ══════════════════════════════════════════
+        // AUTH UI
+        // ══════════════════════════════════════════
+        let authMode = 'register';
+
+        function openAuth(mode = 'register') {
+            if (currentUser) { sb.auth.signOut(); return; }
+            authMode = mode;
+            updateAuthModal();
+            showModal('modalAuth');
+        }
+
+        function updateAuthModal() {
+            const isReg = authMode === 'register';
+            document.getElementById('authTitle').textContent    = isReg ? 'Rejestracja' : 'Logowanie';
+            document.getElementById('authSubtitle').textContent = isReg ? 'Graj bez limitu i śledź swoje postępy.' : 'Witaj z powrotem!';
+            document.getElementById('authSubmit').textContent   = isReg ? 'Zarejestruj się' : 'Zaloguj się';
+            document.getElementById('authToggle').innerHTML     = isReg
+                ? 'Masz już konto? <span>Zaloguj się</span>'
+                : 'Nie masz konta? <span>Zarejestruj się</span>';
+            document.getElementById('authError').textContent = '';
+        }
+
+        function toggleAuthMode() {
+            authMode = authMode === 'register' ? 'login' : 'register';
+            updateAuthModal();
+        }
+
+        async function submitAuth() {
+            const email    = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const errEl    = document.getElementById('authError');
+            errEl.textContent = '';
+
+            if (!email || !password) { errEl.textContent = 'Wypełnij oba pola.'; return; }
+
+            const btn = document.getElementById('authSubmit');
+            btn.disabled = true;
+            btn.textContent = '…';
+
+            const fn = authMode === 'register'
+                ? sb.auth.signUp({ email, password })
+                : sb.auth.signInWithPassword({ email, password });
+
+            const { error } = await fn;
+
+            btn.disabled = false;
+            updateAuthModal();
+
+            if (error) {
+                errEl.textContent = error.message;
+            } else {
+                if (authMode === 'register') {
+                    errEl.style.color = '#7ee870';
+                    errEl.textContent = 'Sprawdź maila i kliknij link aktywacyjny!';
+                } else {
+                    hideModal('modalAuth');
+                }
+            }
+        }
+
+        function updateUserUI() {
+            const authBtn = document.getElementById('authBtn');
+            if (currentUser) {
+                authBtn.textContent = currentUser.email.split('@')[0] + ' (wyloguj)';
+                authBtn.classList.add('logged-in');
+            } else {
+                authBtn.textContent = 'Zaloguj się';
+                authBtn.classList.remove('logged-in');
+            }
+            updateCounter();
+            updatePremiumUI();
+        }
+
+        // ══════════════════════════════════════════
+        // MODAL HELPERS
+        // ══════════════════════════════════════════
+        function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // ══════════════════════════════════════════
+        // GAME
+        // ══════════════════════════════════════════
         const THEMES = [
             { bg: '#1e4d1a', border: '#3a8c32', text: '#7ee870' },
             { bg: '#4d3a00', border: '#c49a00', text: '#f5c800' },
             { bg: '#0e2e52', border: '#2a6bbf', text: '#70b0f0' },
         ];
 
-        const CELL_H = 64;
-        const GAP    = 8;
-        const ROW_H  = CELL_H + GAP;
-        const AHEAD  = 20;
+        const CELL_H = 64, GAP = 8, ROW_H = CELL_H + GAP, AHEAD = 20;
 
-        let allPairs    = [];
-        let cells       = [];
-        let rowCount    = 0;
-        let pairIndex   = 0;
-        let currentCell = 0;
-        let stepTimer   = null;
-        let running     = false;
-
-        // beat info from analyze_beat.py — fallback if json missing
-        let beatBpm       = 100;
-        let firstBeat     = 0;
-        let beatDurSec    = 60 / beatBpm;
+        let allPairs = [], cells = [], rowCount = 0, pairIndex = 0, currentCell = 0;
+        let stepTimer = null, running = false;
+        let beatBpm = 100, firstBeat = 0, beatDurSec = 60 / 100;
 
         const gridScroll = document.getElementById('gridScroll');
         const dot        = document.getElementById('dot');
         const btn        = document.getElementById('btn');
         const audio      = document.getElementById('audio');
-        const status     = document.getElementById('status');
 
-        // ---- load data ----
+        async function loadBeat(infoPath, audioPath) {
+            const info = await fetch(infoPath).then(r => r.json()).catch(() => null);
+            if (info) {
+                beatBpm    = info.bpm;
+                firstBeat  = info.first_beat;
+                beatDurSec = 60 / beatBpm;
+                document.getElementById('status').textContent =
+                    `${info.title || ''} · ${beatBpm.toFixed(1)} BPM · start ${firstBeat.toFixed(2)}s`;
+            }
+            audio.src = audioPath;
+            await new Promise(res => { audio.oncanplaythrough = res; audio.load(); });
+        }
+
+        async function loadTodayBeat() {
+            const today = new Date().toISOString().slice(0, 10);
+            try {
+                const index = await fetch('beats_index.json').then(r => r.json());
+                // szukaj dzisiejszego, fallback na najnowszy
+                const entry = index.find(b => b.date === today) || index[0];
+                if (entry) {
+                    await loadBeat(entry.info, entry.info.replace('.json', '.mp3'));
+                    return;
+                }
+            } catch {}
+            // fallback na stare pliki
+            await loadBeat('beat_info.json', 'beat.mp3').catch(() => {});
+        }
 
         Promise.all([
             fetch('rhyming_pairs.json').then(r => r.json()),
-            fetch('beat_info.json').then(r => r.json()).catch(() => null),
-        ]).then(([pairs, beatInfo]) => {
+            sb.auth.getSession(),
+            loadTodayBeat(),
+        ]).then(([pairs, { data: sessionData }]) => {
+            currentUser = sessionData.session?.user || null;
+            updateUserUI();
             allPairs = pairs;
-            if (beatInfo) {
-                beatBpm    = beatInfo.bpm;
-                firstBeat  = beatInfo.first_beat;
-                beatDurSec = 60 / beatBpm;
-                status.textContent = `${beatBpm.toFixed(1)} BPM · start na ${firstBeat.toFixed(2)}s`;
-            }
             initGrid();
             btn.textContent = 'START';
             btn.disabled = false;
+            updateCounter();
         });
 
-        // ---- grid DOM ----
-
-        function randPair() {
-            return allPairs[Math.floor(Math.random() * allPairs.length)];
-        }
+        function randPair() { return allPairs[Math.floor(Math.random() * allPairs.length)]; }
 
         function appendPair() {
-            const pair  = randPair();
-            const theme = THEMES[pairIndex % 3];
+            const pair = randPair(), theme = THEMES[pairIndex % 3];
             pairIndex++;
-
             pair.forEach(word => {
                 const rowEl = document.createElement('div');
                 rowEl.className = 'grid-row';
-
                 for (let c = 0; c < 3; c++) {
                     const d = document.createElement('div');
                     d.className = 'cell blank';
                     rowEl.appendChild(d);
                     cells.push(d);
                 }
-
                 const d = document.createElement('div');
                 d.className = 'cell';
                 d.style.background  = theme.bg;
@@ -214,7 +694,6 @@
                 d.textContent       = word;
                 rowEl.appendChild(d);
                 cells.push(d);
-
                 gridScroll.appendChild(rowEl);
                 rowCount++;
             });
@@ -228,73 +707,65 @@
         function initGrid() {
             gridScroll.innerHTML = '';
             gridScroll.style.transform = 'translateY(0)';
-            cells       = [];
-            rowCount    = 0;
-            pairIndex   = 0;
-            currentCell = 0;
+            cells = []; rowCount = 0; pairIndex = 0; currentCell = 0;
             for (let i = 0; i < AHEAD; i++) appendPair();
         }
 
-        // ---- playback ----
-
         function updateScroll() {
             const curRow = Math.floor(currentCell / 4);
-            const offset = Math.max(0, curRow - 1) * ROW_H;
-            gridScroll.style.transform = `translateY(-${offset}px)`;
+            gridScroll.style.transform = `translateY(-${Math.max(0, curRow - 1) * ROW_H}px)`;
         }
 
         function step() {
+            // check limit at the start of each new row
+            if (currentCell % 4 === 0 && currentCell > 0) {
+                const count = addRow();
+                if (!currentUser && count > DAILY_LIMIT()) {
+                    stopAll();
+                    showModal('modalLimit');
+                    return;
+                }
+            }
+
             ensureAhead();
 
-            const prev    = currentCell - 1;
+            const prev = currentCell - 1;
             const curRow  = Math.floor(currentCell / 4);
             const prevRow = Math.floor(prev / 4);
 
             if (prev >= 0 && cells[prev]) {
                 cells[prev].classList.remove('active');
-                // keep dim trail if still in same row
                 if (curRow === prevRow) cells[prev].classList.add('passed');
             }
-
-            // entering new row — clear trail from previous row
             if (currentCell % 4 === 0 && currentCell > 0) {
                 for (let i = prevRow * 4; i < prevRow * 4 + 4; i++)
                     if (cells[i]) cells[i].classList.remove('passed');
             }
 
             cells[currentCell].classList.add('active');
-
             if (currentCell % 4 === 0) updateScroll();
 
             dot.classList.remove('dim');
             setTimeout(() => dot.classList.add('dim'), 110);
 
             currentCell++;
-
             scheduleNext();
         }
 
         function scheduleNext() {
             if (!running) return;
-
-            // Use audio.currentTime as ground truth — no drift
             const now      = audio.currentTime;
             const elapsed  = now - firstBeat;
-            const nextBeat = Math.ceil(elapsed / beatDurSec + 0.02); // +epsilon avoids float edge
+            const nextBeat = Math.ceil(elapsed / beatDurSec + 0.02);
             const delay    = (firstBeat + nextBeat * beatDurSec - now) * 1000;
-
             stepTimer = setTimeout(step, Math.max(0, delay));
         }
 
         function waitForFirstBeat() {
-            const now   = audio.currentTime;
-            const delay = (firstBeat - now) * 1000;
-
-            if (delay > 0) {
-                stepTimer = setTimeout(waitForFirstBeat, Math.min(delay, 50));
-            } else {
-                step();
-            }
+            const delay = (firstBeat - audio.currentTime) * 1000;
+            stepTimer = delay > 0
+                ? setTimeout(waitForFirstBeat, Math.min(delay, 50))
+                : setTimeout(step, 0);
         }
 
         function stopAll() {
@@ -310,17 +781,15 @@
         }
 
         function toggleGame() {
-            if (running) {
-                stopAll();
-            } else {
-                running = true;
-                btn.textContent = 'STOP';
-                btn.classList.add('running');
-                initGrid();
-                audio.currentTime = 0;
-                audio.play();
-                waitForFirstBeat();
-            }
+            if (running) { stopAll(); return; }
+            if (isLimited()) { showModal('modalLimit'); return; }
+            running = true;
+            btn.textContent = 'STOP';
+            btn.classList.add('running');
+            initGrid();
+            audio.currentTime = 0;
+            audio.play();
+            waitForFirstBeat();
         }
     </script>
 </body>
