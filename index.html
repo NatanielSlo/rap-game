@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Gra w Rymy</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #111;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            gap: 1.1rem;
+            padding: 2rem;
+        }
+
+        h1 { font-size: 2rem; letter-spacing: 2px; }
+
+        .desc {
+            color: #aaa;
+            text-align: center;
+            font-size: 0.9rem;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+        .desc strong { color: #fff; }
+
+        .indicator {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 10px #fff;
+            transition: opacity 0.06s;
+        }
+        .indicator.dim { opacity: 0.12; }
+
+        .viewport {
+            width: calc(4 * 150px + 3 * 8px);
+            height: calc(6 * 64px + 5 * 8px);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .grid-scroll {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform 0.35s ease;
+            will-change: transform;
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: repeat(4, 150px);
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .cell {
+            height: 64px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid transparent;
+            text-transform: lowercase;
+        }
+
+        .blank {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+
+        .cell.active {
+            border-color: #fff !important;
+            box-shadow: 0 0 18px rgba(255, 255, 255, 0.75);
+        }
+        .blank.active { background: #484848; }
+
+        .blank.passed {
+            background: #363636;
+            border-color: #5a5a5a;
+        }
+        .cell.passed:not(.blank) {
+            opacity: 0.45;
+        }
+
+        button {
+            padding: 12px 48px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none; border-radius: 8px;
+            cursor: pointer;
+            background: #3a8c32; color: #fff;
+            letter-spacing: 1px;
+        }
+        button:hover { background: #4aab3e; }
+        button.running { background: #8c3232; }
+        button.running:hover { background: #ab3e3e; }
+        button:disabled { background: #555; cursor: default; }
+
+        #status {
+            font-size: 0.85rem;
+            color: #666;
+            min-height: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>GRA W RYMY</h1>
+    <p class="desc">
+        Na <strong>pustych polach</strong> — improwizuj!&nbsp;
+        Na <strong>kolorowych</strong> — powiedz słowo.<br>
+        Co dwa słowa rymują się ze sobą.
+    </p>
+
+    <div class="indicator dim" id="dot"></div>
+
+    <div class="viewport">
+        <div class="grid-scroll" id="gridScroll"></div>
+    </div>
+
+    <button id="btn" onclick="toggleGame()" disabled>ładowanie…</button>
+    <div id="status"></div>
+
+    <audio id="audio" src="beat.mp3"></audio>
+
+    <script>
+        const THEMES = [
+            { bg: '#1e4d1a', border: '#3a8c32', text: '#7ee870' },
+            { bg: '#4d3a00', border: '#c49a00', text: '#f5c800' },
+            { bg: '#0e2e52', border: '#2a6bbf', text: '#70b0f0' },
+        ];
+
+        const CELL_H = 64;
+        const GAP    = 8;
+        const ROW_H  = CELL_H + GAP;
+        const AHEAD  = 20;
+
+        let allPairs    = [];
+        let cells       = [];
+        let rowCount    = 0;
+        let pairIndex   = 0;
+        let currentCell = 0;
+        let stepTimer   = null;
+        let running     = false;
+
+        // beat info from analyze_beat.py — fallback if json missing
+        let beatBpm       = 100;
+        let firstBeat     = 0;
+        let beatDurSec    = 60 / beatBpm;
+
+        const gridScroll = document.getElementById('gridScroll');
+        const dot        = document.getElementById('dot');
+        const btn        = document.getElementById('btn');
+        const audio      = document.getElementById('audio');
+        const status     = document.getElementById('status');
+
+        // ---- load data ----
+
+        Promise.all([
+            fetch('rhyming_pairs.json').then(r => r.json()),
+            fetch('beat_info.json').then(r => r.json()).catch(() => null),
+        ]).then(([pairs, beatInfo]) => {
+            allPairs = pairs;
+            if (beatInfo) {
+                beatBpm    = beatInfo.bpm;
+                firstBeat  = beatInfo.first_beat;
+                beatDurSec = 60 / beatBpm;
+                status.textContent = `${beatBpm.toFixed(1)} BPM · start na ${firstBeat.toFixed(2)}s`;
+            }
+            initGrid();
+            btn.textContent = 'START';
+            btn.disabled = false;
+        });
+
+        // ---- grid DOM ----
+
+        function randPair() {
+            return allPairs[Math.floor(Math.random() * allPairs.length)];
+        }
+
+        function appendPair() {
+            const pair  = randPair();
+            const theme = THEMES[pairIndex % 3];
+            pairIndex++;
+
+            pair.forEach(word => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'grid-row';
+
+                for (let c = 0; c < 3; c++) {
+                    const d = document.createElement('div');
+                    d.className = 'cell blank';
+                    rowEl.appendChild(d);
+                    cells.push(d);
+                }
+
+                const d = document.createElement('div');
+                d.className = 'cell';
+                d.style.background  = theme.bg;
+                d.style.borderColor = theme.border;
+                d.style.color       = theme.text;
+                d.textContent       = word;
+                rowEl.appendChild(d);
+                cells.push(d);
+
+                gridScroll.appendChild(rowEl);
+                rowCount++;
+            });
+        }
+
+        function ensureAhead() {
+            const curRow = Math.floor(currentCell / 4);
+            while (rowCount - curRow < AHEAD) appendPair();
+        }
+
+        function initGrid() {
+            gridScroll.innerHTML = '';
+            gridScroll.style.transform = 'translateY(0)';
+            cells       = [];
+            rowCount    = 0;
+            pairIndex   = 0;
+            currentCell = 0;
+            for (let i = 0; i < AHEAD; i++) appendPair();
+        }
+
+        // ---- playback ----
+
+        function updateScroll() {
+            const curRow = Math.floor(currentCell / 4);
+            const offset = Math.max(0, curRow - 1) * ROW_H;
+            gridScroll.style.transform = `translateY(-${offset}px)`;
+        }
+
+        function step() {
+            ensureAhead();
+
+            const prev    = currentCell - 1;
+            const curRow  = Math.floor(currentCell / 4);
+            const prevRow = Math.floor(prev / 4);
+
+            if (prev >= 0 && cells[prev]) {
+                cells[prev].classList.remove('active');
+                // keep dim trail if still in same row
+                if (curRow === prevRow) cells[prev].classList.add('passed');
+            }
+
+            // entering new row — clear trail from previous row
+            if (currentCell % 4 === 0 && currentCell > 0) {
+                for (let i = prevRow * 4; i < prevRow * 4 + 4; i++)
+                    if (cells[i]) cells[i].classList.remove('passed');
+            }
+
+            cells[currentCell].classList.add('active');
+
+            if (currentCell % 4 === 0) updateScroll();
+
+            dot.classList.remove('dim');
+            setTimeout(() => dot.classList.add('dim'), 110);
+
+            currentCell++;
+
+            scheduleNext();
+        }
+
+        function scheduleNext() {
+            if (!running) return;
+
+            // Use audio.currentTime as ground truth — no drift
+            const now      = audio.currentTime;
+            const elapsed  = now - firstBeat;
+            const nextBeat = Math.ceil(elapsed / beatDurSec + 0.02); // +epsilon avoids float edge
+            const delay    = (firstBeat + nextBeat * beatDurSec - now) * 1000;
+
+            stepTimer = setTimeout(step, Math.max(0, delay));
+        }
+
+        function waitForFirstBeat() {
+            const now   = audio.currentTime;
+            const delay = (firstBeat - now) * 1000;
+
+            if (delay > 0) {
+                stepTimer = setTimeout(waitForFirstBeat, Math.min(delay, 50));
+            } else {
+                step();
+            }
+        }
+
+        function stopAll() {
+            clearTimeout(stepTimer);
+            audio.pause();
+            audio.currentTime = 0;
+            if (cells[currentCell - 1]) cells[currentCell - 1].classList.remove('active');
+            dot.classList.add('dim');
+            btn.textContent = 'START';
+            btn.classList.remove('running');
+            running = false;
+            initGrid();
+        }
+
+        function toggleGame() {
+            if (running) {
+                stopAll();
+            } else {
+                running = true;
+                btn.textContent = 'STOP';
+                btn.classList.add('running');
+                initGrid();
+                audio.currentTime = 0;
+                audio.play();
+                waitForFirstBeat();
+            }
+        }
+    </script>
+</body>
+</html>
