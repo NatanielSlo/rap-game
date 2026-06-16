@@ -546,6 +546,52 @@
             color: var(--c-green-hi) !important;
         }
 
+        /* ─── ABOUT SECTION ─────────────────── */
+        .about-section {
+            width: 100%;
+            max-width: 660px;
+            margin-top: 1rem;
+        }
+        .about-details { list-style: none; }
+        .about-summary {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+            list-style: none;
+            text-align: center;
+            padding: 0.4rem 0;
+            transition: color 0.15s;
+        }
+        .about-summary::-webkit-details-marker { display: none; }
+        .about-summary::marker { display: none; }
+        .about-summary:hover { color: #555; }
+        .about-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--c-border);
+            margin-top: 0.5rem;
+        }
+        .about-block h2 {
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #383838;
+            margin-bottom: 0.4rem;
+        }
+        .about-block p {
+            font-size: 0.82rem;
+            color: #404040;
+            line-height: 1.75;
+        }
+
         /* ─── MOBILE ─────────────────────────── */
         @media (max-width: 680px) {
             body { gap: 0.7rem; padding: 0.75rem; padding-top: calc(var(--topbar-h) + 0.75rem); }
@@ -643,6 +689,26 @@
     </div>
 
     <audio id="audio" preload="none"></audio>
+
+    <section class="about-section">
+        <details class="about-details">
+            <summary class="about-summary">Informacje</summary>
+            <div class="about-grid">
+                <div class="about-block">
+                    <h2>Czym jest Gra w Rymy?</h2>
+                    <p>Gra w Rymy to darmowy trener freestyle rap po polsku. Beat gra w tle, a ty improwizujesz — na pustych polach wymyślasz własne słowa, na kolorowych mówisz podane słowo. Co dwa wiersze słowa się rymują, żebyś mógł ćwiczyć płynne łączenie improwizacji z rymem.</p>
+                </div>
+                <div class="about-block">
+                    <h2>Jak ćwiczyć freestyle rap?</h2>
+                    <p>Regularny trening to klucz. Codziennie nowy beat, codziennie nowe rymy — zaledwie 5–10 minut dziennie wyrabia poczucie rytmu i refleks słowny. Nie musisz mieć doświadczenia: gra prowadzi cię przez każdy takt, a poziom trudności rośnie razem z tobą.</p>
+                </div>
+                <div class="about-block">
+                    <h2>Dla kogo jest ta gra?</h2>
+                    <p>Dla każdego, kto chce poprawić swój freestyle — od zupełnych początkujących po doświadczonych MC szukających codziennego treningu. Gra działa płynnie na telefonie i komputerze, bez instalacji.</p>
+                </div>
+            </div>
+        </details>
+    </section>
 
     <!-- ══ TUTORIAL MODAL ══ -->
     <div class="overlay" id="modalTutorial">
