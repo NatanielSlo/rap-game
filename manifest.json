@@ -1,0 +1,18 @@
+{
+  "name": "Gra w Rymy",
+  "short_name": "Gra w Rymy",
+  "description": "Trenuj freestyle rap po polsku — beat gra w tle, improwizuj w rytmie.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#111111",
+  "lang": "pl",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

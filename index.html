@@ -6,19 +6,20 @@
 
     <!-- SEO podstawowe -->
     <title>Gra w Rymy — Trening Freestyle Rap po Polsku</title>
-    <meta name="description" content="Trenuj freestyle rap po polsku! Beat gra w tle, kratki przesuwają się w rytmie — improwizuj na pustych polach, mów słowa na kolorowych. Darmowa gra online.">
-    <meta name="keywords" content="gra w rymy, freestyle rap, trening rap, rap po polsku, rymowanie, freestyle hip hop, gra muzyczna online">
+    <meta name="description" content="Trenuj freestyle rap po polsku! Beat gra w tle, a ty improwizujesz i poprawiasz swój freestyle. Darmowa gra online.">
+    <meta name="keywords" content="ćwieczenie rapu po polsku, rhyme game po polsku, gra w rymy, freestyle rap po polsku, trening rap, rap po polsku, rymowanie, freestyle hip hop, gra muzyczna online">
     <meta name="author" content="Gra w Rymy">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://rap-gra.online/">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="manifest" href="manifest.json">
 
     <!-- Open Graph (Facebook, LinkedIn, itp.) -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://rap-gra.online/">
     <meta property="og:title" content="Gra w Rymy — Trening Freestyle Rap po Polsku">
-    <meta property="og:description" content="Trenuj freestyle rap po polsku! Beat gra w tle, kratki przesuwają się w rytmie — improwizuj i mów słowa w rytmie.">
+    <meta property="og:description" content="Trenuj freestyle rap po polsku! Beat gra w tle, a ty improwizujesz i poprawiasz swój freestyle. Darmowa gra online.">
     <meta property="og:image" content="https://rap-gra.online/og-image.jpg">
     <meta property="og:locale" content="pl_PL">
     <meta property="og:site_name" content="Gra w Rymy">
@@ -26,7 +27,7 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Gra w Rymy — Trening Freestyle Rap">
-    <meta name="twitter:description" content="Trenuj freestyle rap po polsku! Beat gra w tle, kratki przesuwają się w rytmie.">
+    <meta name="twitter:description" content="Trenuj freestyle rap po polsku! Beat gra w tle, a ty improwizujesz i poprawiasz swój freestyle. Darmowa gra online.">
     <meta name="twitter:image" content="https://rap-gra.online/og-image.jpg">
 
     <!-- Kolor przeglądarki mobilnej -->
@@ -38,12 +39,27 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Gra w Rymy",
+      "alternateName": "Freestyle Rap Trening",
       "url": "https://rap-gra.online/",
-      "description": "Interaktywna gra do treningu freestyle rap po polsku. Beat gra w tle, kratki przesuwają się w rytmie — ćwicz improwizację i rymowanie.",
+      "description": "Interaktywna gra do treningu freestyle rap po polsku. Beat gra w tle, a ty rapujesz i ćwiczysz improwizację i rapowanie.",
       "applicationCategory": "GameApplication",
-      "operatingSystem": "Web",
+      "operatingSystem": "Web, Android, iOS",
+      "browserRequirements": "Requires JavaScript. Requires HTML5 audio.",
       "inLanguage": "pl",
       "isAccessibleForFree": true,
+      "image": "https://rap-gra.online/og-image.jpg",
+      "screenshot": "https://rap-gra.online/og-image.jpg",
+      "featureList": [
+        "Codzienny nowy beat",
+        "Rymujące się pary słów",
+        "Siatka synchronizowana z rytmem",
+        "Biblioteka beatów dla premium",
+        "Tryb mobilny"
+      ],
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Osoby uczące się freestyle rap, miłośnicy hip-hopu"
+      },
       "offers": [
         {
           "@type": "Offer",
@@ -65,7 +81,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* ─── TOKENS ─────────────────────────── */
         :root {
@@ -627,7 +642,7 @@
         </div>
     </div>
 
-    <audio id="audio" src="beat.mp3"></audio>
+    <audio id="audio" preload="none"></audio>
 
     <!-- ══ TUTORIAL MODAL ══ -->
     <div class="overlay" id="modalTutorial">
@@ -715,6 +730,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // ══════════════════════════════════════════
         // SUPABASE — wklej swoje dane z supabase.com
