@@ -122,35 +122,42 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             height: var(--topbar-h);
-            background: var(--c-surface);
+            background: linear-gradient(180deg, #1a1a1a 0%, var(--c-surface) 100%);
             border-bottom: 1px solid var(--c-border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 1.25rem;
+            padding: 0 2.5rem;
+            gap: 1.5rem;
             z-index: 10;
         }
         .topbar-title {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.3rem;
-            letter-spacing: 4px;
+            font-size: 1.35rem;
+            letter-spacing: 5px;
             color: var(--c-text);
             flex-shrink: 0;
+            opacity: 0.9;
         }
-        .topbar-right { display: flex; align-items: center; gap: 0.5rem; }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
         .row-counter {
             font-size: 0.78rem;
             color: var(--c-muted);
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
+            padding-right: 0.25rem;
         }
         .row-counter span { color: var(--c-text); font-weight: 600; }
         .row-counter.warning span:first-child { color: var(--c-gold-hi); }
         .row-counter.danger  span:first-child { color: var(--c-red-hi); }
 
         .auth-btn {
-            padding: 5px 13px;
+            padding: 6px 16px;
             font-size: 0.77rem;
             font-weight: 600;
             font-family: 'Barlow', sans-serif;
@@ -165,9 +172,15 @@
         .auth-btn:hover { background: #272727; border-color: #555; }
         .auth-btn.logged-in { border-color: var(--c-green); color: var(--c-green-hi); }
 
-        .topbar-premium { display: flex; align-items: center; gap: 0.35rem; }
+        .topbar-premium {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-right: 0.5rem;
+            border-right: 1px solid var(--c-border);
+        }
         .premium-btn {
-            padding: 5px 11px;
+            padding: 6px 13px;
             font-size: 0.74rem;
             font-weight: 600;
             font-family: 'Barlow', sans-serif;
@@ -187,6 +200,15 @@
         .premium-btn.unlocked { border-color: var(--c-gold); color: var(--c-gold-hi); }
         .premium-btn.unlocked:hover { background: rgba(196,154,0,0.08); }
         .premium-btn.unlocked .lock { display: none; }
+
+        @media (max-width: 680px) {
+            .topbar { padding: 0 1rem; gap: 0.5rem; }
+            .topbar-title { display: none; }
+            .row-counter { display: none !important; }
+            .topbar-premium { padding-right: 0.35rem; gap: 0.35rem; }
+            .auth-btn { padding: 5px 11px; }
+            .premium-btn { padding: 5px 9px; }
+        }
 
         /* ─── MAIN LAYOUT ────────────────────── */
         .hero { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
@@ -546,12 +568,18 @@
             color: var(--c-green-hi) !important;
         }
 
-        /* ─── ABOUT SECTION ─────────────────── */
-        .about-section {
+        /* ─── ABOUT + CONTACT ROW ───────────── */
+        .bottom-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 2.5rem;
             width: 100%;
             max-width: 660px;
             margin-top: 1rem;
         }
+        .about-section { flex: 1; min-width: 0; }
+        .contact-section { flex: 0 0 190px; }
+
         .about-details { list-style: none; }
         .about-summary {
             font-size: 0.7rem;
@@ -592,17 +620,62 @@
             line-height: 1.75;
         }
 
+        /* ─── CONTACT SECTION ────────────────── */
+        .contact-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #333;
+            text-align: center;
+            padding: 0.4rem 0;
+        }
+        .contact-body {
+            padding-top: 1rem;
+            border-top: 1px solid var(--c-border);
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+        .contact-by {
+            font-size: 0.75rem;
+            color: #383838;
+            line-height: 1.55;
+        }
+        .contact-by strong {
+            display: block;
+            color: #444;
+            font-weight: 600;
+        }
+        .contact-email {
+            display: inline-block;
+            font-size: 0.74rem;
+            color: #2e6b28;
+            text-decoration: none;
+            word-break: break-all;
+            line-height: 1.4;
+            transition: color 0.15s;
+        }
+        .contact-email:hover { color: var(--c-green-hi); }
+        .contact-hint {
+            font-size: 0.72rem;
+            color: #2d2d2d;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        @media (max-width: 520px) {
+            .bottom-row { flex-direction: column; gap: 0; }
+            .about-section, .contact-section { flex: none; width: 100%; }
+        }
+
         /* ─── MOBILE ─────────────────────────── */
         @media (max-width: 680px) {
             body { gap: 0.7rem; padding: 0.75rem; padding-top: calc(var(--topbar-h) + 0.75rem); }
 
-            .topbar { padding: 0 0.85rem; }
-            .topbar-title { font-size: 1.1rem; letter-spacing: 3px; }
             .topbar-right { gap: 0.35rem; }
-            .premium-btn { padding: 5px 8px; font-size: 0.7rem; }
             #btnNoAds { display: none; }
-            .auth-btn { padding: 5px 10px; font-size: 0.73rem; }
-            .row-counter { font-size: 0.72rem; }
 
             h1 { font-size: 2.6rem; letter-spacing: 5px; }
             .desc { font-size: 0.8rem; }
@@ -690,25 +763,41 @@
 
     <audio id="audio" preload="none"></audio>
 
-    <section class="about-section">
-        <details class="about-details">
-            <summary class="about-summary">Informacje</summary>
-            <div class="about-grid">
-                <div class="about-block">
-                    <h2>Czym jest Gra w Rymy?</h2>
-                    <p>Gra w Rymy to darmowy trener freestyle rap po polsku. Beat gra w tle, a ty improwizujesz — na pustych polach wymyślasz własne słowa, na kolorowych mówisz podane słowo. Co dwa wiersze słowa się rymują, żebyś mógł ćwiczyć płynne łączenie improwizacji z rymem.</p>
+    <div class="bottom-row">
+        <section class="about-section">
+            <details class="about-details">
+                <summary class="about-summary">Informacje</summary>
+                <div class="about-grid">
+                    <div class="about-block">
+                        <h2>Czym jest Gra w Rymy?</h2>
+                        <p>Gra w Rymy to darmowy trener freestyle rap po polsku. Beat gra w tle, a ty improwizujesz — na pustych polach wymyślasz własne słowa, na kolorowych mówisz podane słowo. Co dwa wiersze słowa się rymują, żebyś mógł ćwiczyć płynne łączenie improwizacji z rymem.</p>
+                    </div>
+                    <div class="about-block">
+                        <h2>Jak ćwiczyć freestyle rap?</h2>
+                        <p>Regularny trening to klucz. Codziennie nowy beat, codziennie nowe rymy — zaledwie 5–10 minut dziennie wyrabia poczucie rytmu i refleks słowny. Nie musisz mieć doświadczenia: gra prowadzi cię przez każdy takt, a poziom trudności rośnie razem z tobą.</p>
+                    </div>
+                    <div class="about-block">
+                        <h2>Dla kogo jest ta gra?</h2>
+                        <p>Dla każdego, kto chce poprawić swój freestyle — od zupełnych początkujących po doświadczonych MC szukających codziennego treningu. Gra działa płynnie na telefonie i komputerze, bez instalacji.</p>
+                    </div>
                 </div>
-                <div class="about-block">
-                    <h2>Jak ćwiczyć freestyle rap?</h2>
-                    <p>Regularny trening to klucz. Codziennie nowy beat, codziennie nowe rymy — zaledwie 5–10 minut dziennie wyrabia poczucie rytmu i refleks słowny. Nie musisz mieć doświadczenia: gra prowadzi cię przez każdy takt, a poziom trudności rośnie razem z tobą.</p>
+            </details>
+        </section>
+
+        <section class="contact-section">
+            <details class="about-details">
+                <summary class="about-summary">Kontakt</summary>
+                <div class="contact-body">
+                    <p class="contact-by">
+                        Strona stworzona przez
+                        <strong>Nataniel Słowikowski</strong>
+                    </p>
+                    <a href="mailto:nataniel@natanielslowikowski.pl" class="contact-email">nataniel@natanielslowikowski.pl</a>
+                    <p class="contact-hint">Masz pytania albo napotkałeś problem? Napisz!</p>
                 </div>
-                <div class="about-block">
-                    <h2>Dla kogo jest ta gra?</h2>
-                    <p>Dla każdego, kto chce poprawić swój freestyle — od zupełnych początkujących po doświadczonych MC szukających codziennego treningu. Gra działa płynnie na telefonie i komputerze, bez instalacji.</p>
-                </div>
-            </div>
-        </details>
-    </section>
+            </details>
+        </section>
+    </div>
 
     <!-- ══ TUTORIAL MODAL ══ -->
     <div class="overlay" id="modalTutorial">
@@ -1029,7 +1118,7 @@
         let stepTimer = null, running = false;
         let beatBpm = 100, firstBeat = 0, beatDurSec = 60 / 100;
 
-        let libraryBeats = [], selectedBeat = null, dailyBeatId = null, dailyOverride = null;
+        let libraryBeats = [], selectedBeat = null, dailyBeatId = null;
 
         const gridScroll = document.getElementById('gridScroll');
         const dot        = document.getElementById('dot');
@@ -1049,21 +1138,14 @@
             await new Promise(res => { audio.oncanplaythrough = res; audio.load(); });
         }
 
-        function encodeAudioPath(path) {
-            return path.split('/').map(encodeURIComponent).join('/');
-        }
-
         async function loadLibraryBeat(beat) {
-            const info = await fetch(beat.info).then(r => r.json()).catch(() => null);
-            if (info) {
-                beatBpm    = info.bpm;
-                firstBeat  = info.first_beat;
-                beatDurSec = 60 / beatBpm;
-            }
+            beatBpm    = beat.bpm;
+            firstBeat  = beat.first_beat;
+            beatDurSec = 60 / beatBpm;
             selectedBeat = beat;
             document.getElementById('status').textContent =
-                `${info?.title || beat.title || ''} · ${beatBpm.toFixed(1)} BPM`;
-            audio.src = encodeAudioPath(beat.audio);
+                `${beat.title} · ${beatBpm.toFixed(1)} BPM`;
+            audio.src = beat.audio_url;
             await new Promise(res => {
                 audio.oncanplaythrough = res;
                 audio.onerror = res;
@@ -1081,24 +1163,15 @@
 
         async function loadTodayBeat() {
             try {
-                const raw = await fetch('library_index.json').then(r => r.json());
-                if (Array.isArray(raw)) {
-                    libraryBeats = raw;
-                    dailyOverride = null;
-                } else {
-                    libraryBeats = raw.beats || [];
-                    dailyOverride = raw.daily_override || null;
+                const { data, error } = await sb.from('beats').select('*').order('created_at');
+                if (!error && data?.length) {
+                    libraryBeats = data;
+                    const daily = data.find(b => b.is_daily) ?? data[dailyIndex(data)];
+                    dailyBeatId = daily.id;
+                    await loadLibraryBeat(daily);
+                    return;
                 }
-            } catch { libraryBeats = []; }
-
-            if (libraryBeats.length > 0) {
-                const beat = dailyOverride
-                    ? (libraryBeats.find(b => b.id === dailyOverride) || libraryBeats[dailyIndex(libraryBeats)])
-                    : libraryBeats[dailyIndex(libraryBeats)];
-                dailyBeatId = beat.id;
-                await loadLibraryBeat(beat);
-                return;
-            }
+            } catch {}
 
             // fallback: stary beats_index.json
             try {
