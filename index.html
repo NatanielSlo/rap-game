@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <!-- Analytics -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="f6d5c4f2-57c4-4448-b472-3097041cf321"></script>
+
     <!-- SEO podstawowe -->
     <title>Gra w Rymy — Trening Freestyle Rap po Polsku</title>
     <meta name="description" content="Trenuj freestyle rap po polsku! Beat gra w tle, a ty improwizujesz i poprawiasz swój freestyle. Darmowa gra online.">
@@ -941,6 +944,7 @@
         function closeTutorial() {
             localStorage.setItem('rap_tutorial', '1');
             hideModal('modalTutorial');
+            window.umami?.track('tutorial_completed');
         }
 
         if (!localStorage.getItem('rap_tutorial')) {
@@ -983,6 +987,7 @@
             }
 
             currentPremiumAction = feature;
+            window.umami?.track('paywall_shown', { feature });
             const f = PREMIUM_FEATURES[feature];
             document.getElementById('paywallIcon').textContent  = f.icon;
             document.getElementById('paywallTitle').textContent = f.title;
@@ -1000,8 +1005,10 @@
         function paywallCtaClick() {
             hideModal('modalPaywall');
             if (!currentUser) {
+                window.umami?.track('paywall_cta_click', { authed: false, feature: currentPremiumAction });
                 openAuth('register');
             } else {
+                window.umami?.track('checkout_started', { feature: currentPremiumAction });
                 // redirect do Stripe z user email jako prefill
                 const url = STRIPE_PAYMENT_LINK
                     + '?prefilled_email=' + encodeURIComponent(currentUser.email)
@@ -1077,8 +1084,10 @@
                 if (authMode === 'register') {
                     errEl.style.color = '#7ee870';
                     errEl.textContent = 'Sprawdź maila i kliknij link aktywacyjny!';
+                    window.umami?.track('signed_up');
                 } else {
                     hideModal('modalAuth');
+                    window.umami?.track('logged_in');
                 }
             }
         }
@@ -1288,6 +1297,7 @@
                 if (!currentUser && count > DAILY_LIMIT()) {
                     stopAll();
                     showModal('modalLimit');
+                    window.umami?.track('daily_limit_hit');
                     return;
                 }
             }
@@ -1387,6 +1397,7 @@
         function toggleGame() {
             if (running) { stopAll(); return; }
             if (isLimited()) { showModal('modalLimit'); return; }
+            window.umami?.track('game_started', { paid: isPaid(), logged_in: !!currentUser });
             running = true;
             btn.textContent = 'STOP';
             btn.classList.add('running');
