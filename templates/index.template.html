@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Analytics -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="f6d5c4f2-57c4-4448-b472-3097041cf321"></script>
+
+    <!-- SEO -->
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{META_DESCRIPTION}}">
+    <meta name="keywords" content="{{META_KEYWORDS}}">
+    <meta name="author" content="{{SITE_NAME}}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{CANONICAL_URL}}">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+    <link rel="manifest" href="{{MANIFEST_HREF}}">
+{{HREFLANG_LINKS}}
+    <!-- Open Graph (Facebook, LinkedIn, itp.) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{CANONICAL_URL}}">
+    <meta property="og:title" content="{{OG_TITLE}}">
+    <meta property="og:description" content="{{META_DESCRIPTION}}">
+    <meta property="og:image" content="{{OG_IMAGE_URL}}">
+    <meta property="og:image:width" content="{{OG_IMAGE_WIDTH}}">
+    <meta property="og:image:height" content="{{OG_IMAGE_HEIGHT}}">
+    <meta property="og:image:alt" content="{{OG_IMAGE_ALT}}">
+    <meta property="og:locale" content="{{OG_LOCALE}}">
+    <meta property="og:site_name" content="{{SITE_NAME}}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{TWITTER_TITLE}}">
+    <meta name="twitter:description" content="{{META_DESCRIPTION}}">
+    <meta name="twitter:image" content="{{OG_IMAGE_URL}}">
+    <meta name="twitter:image:alt" content="{{OG_IMAGE_ALT}}">
+
+    <!-- Kolor przeglądarki mobilnej -->
+    <meta name="theme-color" content="#111111">
+
+    <!-- Dane strukturalne JSON-LD -->
+    <script type="application/ld+json">
+{{JSONLD}}
+    </script>
+    <script type="application/ld+json">
+{{FAQ_JSONLD}}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://jexmqozhplyddyupeaxl.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cloud.umami.is">
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <!-- top bar -->
+    <div class="topbar">
+        <span class="topbar-title">{{TOPBAR_TITLE}}</span>
+        <div class="topbar-right">
+            <div class="topbar-premium">
+                <button class="premium-btn" id="btnChangeBeat" onclick="premiumAction('beat')">
+                    <span class="lock">🔒</span> {{PREMIUM_BEAT_BTN}}
+                </button>
+                <button class="premium-btn" id="btnNoAds" onclick="premiumAction('ads')">
+                    <span class="lock">🔒</span> {{PREMIUM_ADS_BTN}}
+                </button>
+            </div>
+            <span class="row-counter hidden" id="rowCounter"></span>
+            <button class="auth-btn" id="authBtn" onclick="openAuth()">{{AUTH_LOGIN_BTN}}</button>
+        </div>
+    </div>
+
+    <!-- main -->
+    <div class="hero">
+        <h1>{{HERO_TITLE}}</h1>
+        <p class="desc">
+{{HERO_DESC_HTML}}
+        </p>
+    </div>
+
+    <div class="indicator dim" id="dot"></div>
+
+    <div class="viewport-wrap">
+        <div class="viewport">
+            <div class="grid-scroll" id="gridScroll"></div>
+        </div>
+    </div>
+
+    <button id="btn" onclick="toggleGame()" disabled>{{STATUS_LOADING}}</button>
+    <div id="status"></div>
+
+    <div class="share-row">
+        <button class="share-trigger" onclick="handleShare()">{{SHARE_TRIGGER}}</button>
+        <div class="share-panel hidden" id="sharePanel">
+            <button class="share-opt" id="copyBtn" onclick="copyLink()">{{COPY_DEFAULT}}</button>
+            <a class="share-opt" id="shareWa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="share-opt" id="shareFb" href="#" target="_blank" rel="noopener">Facebook</a>
+            <a class="share-opt" id="shareTw" href="#" target="_blank" rel="noopener">𝕏</a>
+        </div>
+    </div>
+
+    <audio id="audio" preload="none"></audio>
+
+    <div class="bottom-row">
+        <section class="about-section">
+            <details class="about-details">
+                <summary class="about-summary">{{ABOUT_SUMMARY}}</summary>
+                <div class="about-grid">
+                    <div class="about-block">
+                        <h2>{{ABOUT_BLOCK1_TITLE}}</h2>
+                        <p>{{ABOUT_BLOCK1_BODY}}</p>
+                    </div>
+                    <div class="about-block">
+                        <h2>{{ABOUT_BLOCK2_TITLE}}</h2>
+                        <p>{{ABOUT_BLOCK2_BODY}}</p>
+                    </div>
+                    <div class="about-block">
+                        <h2>{{ABOUT_BLOCK3_TITLE}}</h2>
+                        <p>{{ABOUT_BLOCK3_BODY}}</p>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <section class="contact-section">
+            <details class="about-details">
+                <summary class="about-summary">{{CONTACT_SUMMARY}}</summary>
+                <div class="contact-body">
+                    <p class="contact-by">
+{{CONTACT_BY_HTML}}
+                    </p>
+                    <a href="mailto:nataniel@natanielslowikowski.pl" class="contact-email">nataniel@natanielslowikowski.pl</a>
+                    <p class="contact-hint">{{CONTACT_HINT}}</p>
+                </div>
+            </details>
+        </section>
+    </div>
+
+    <nav class="lang-switch" aria-label="Language">
+{{LANG_SWITCH_HTML}}
+    </nav>
+
+    <!-- ══ TUTORIAL MODAL ══ -->
+    <div class="overlay" id="modalTutorial">
+        <div class="modal">
+            <h2>{{TUTORIAL_TITLE}}</h2>
+            <div class="modal-steps">
+                <div class="modal-step">
+                    <div class="modal-step-num">1</div>
+                    <div>{{TUTORIAL_STEP1_HTML}}</div>
+                </div>
+                <div class="modal-step">
+                    <div class="modal-step-num">2</div>
+                    <div>{{TUTORIAL_STEP2_HTML}}</div>
+                </div>
+                <div class="modal-step">
+                    <div class="modal-step-num">3</div>
+                    <div>{{TUTORIAL_STEP3_HTML}}</div>
+                </div>
+                <div class="modal-step">
+                    <div class="modal-step-num">4</div>
+                    <div>{{TUTORIAL_STEP4_HTML}}</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeTutorial()">{{TUTORIAL_CLOSE_BTN}}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ LIMIT MODAL ══ -->
+    <div class="overlay hidden" id="modalLimit">
+        <div class="modal">
+            <div class="limit-badge">🎤</div>
+            <h2>{{LIMIT_TITLE}}</h2>
+            <p>{{LIMIT_BODY_HTML}}</p>
+            <div class="modal-actions">
+                <button onclick="hideModal('modalLimit'); openAuth('register')">{{LIMIT_REGISTER_BTN}}</button>
+                <button class="btn-secondary" onclick="hideModal('modalLimit')">{{LIMIT_LATER_BTN}}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PAYWALL MODAL ══ -->
+    <div class="overlay hidden" id="modalPaywall">
+        <div class="modal">
+            <button class="btn-close" onclick="hideModal('modalPaywall')">✕</button>
+            <div class="limit-badge" id="paywallIcon">⭐</div>
+            <h2 id="paywallTitle">{{PAYWALL_TITLE}}</h2>
+            <p id="paywallDesc"></p>
+            <div class="modal-actions">
+                <button id="paywallCta" onclick="paywallCtaClick()">{{PREMIUM_UNLOCK_CTA}}</button>
+                <button class="btn-secondary" onclick="hideModal('modalPaywall')">{{PAYWALL_NOT_NOW_BTN}}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ BEAT PICKER MODAL ══ -->
+    <div class="overlay hidden" id="modalBeatPicker">
+        <div class="modal modal-wide">
+            <button class="btn-close" onclick="hideModal('modalBeatPicker')">✕</button>
+            <h2>{{BEATPICKER_TITLE}}</h2>
+            <p>{{BEATPICKER_DESC}}</p>
+            <div id="beatList" class="beat-list"></div>
+            <div class="modal-actions" style="margin-top:0.25rem">
+                <button class="btn-secondary" onclick="hideModal('modalBeatPicker')">{{BEATPICKER_CLOSE_BTN}}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ AUTH MODAL ══ -->
+    <div class="overlay hidden" id="modalAuth">
+        <div class="modal">
+            <button class="btn-close" onclick="hideModal('modalAuth')">✕</button>
+            <h2 id="authTitle">{{AUTH_REGISTER_TITLE}}</h2>
+            <p id="authSubtitle">{{AUTH_REGISTER_SUBTITLE}}</p>
+            <input class="auth-input" type="email" id="authEmail" placeholder="{{AUTH_EMAIL_PLACEHOLDER}}" />
+            <input class="auth-input" type="password" id="authPassword" placeholder="{{AUTH_PASSWORD_PLACEHOLDER}}" />
+            <div class="auth-error" id="authError"></div>
+            <div class="modal-actions">
+                <button id="authSubmit" onclick="submitAuth()">{{AUTH_REGISTER_SUBMIT}}</button>
+            </div>
+            <p class="auth-toggle" id="authToggle" onclick="toggleAuthMode()">
+{{AUTH_TOGGLE_TO_LOGIN_HTML}}
+            </p>
+        </div>
+    </div>
+
+    <!-- ══ LANGUAGE SUGGESTION POPUP (floats over the game, no dimmed backdrop) ══ -->
+    <div class="modal lang-suggest-popup hidden" id="modalLangSuggest">
+        <div class="limit-badge">🌐</div>
+        <h2 id="langSuggestText"></h2>
+        <div class="modal-actions">
+            <button id="langSuggestGo"></button>
+            <button class="btn-secondary" id="langSuggestStay" onclick="dismissLangBanner()"></button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.APP_CONFIG = {{APP_CONFIG_JSON}};
+        window.STRINGS = {{STRINGS_JSON}};
+    </script>
+    <script src="/app.js"></script>
+</body>
+</html>

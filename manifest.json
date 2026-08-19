@@ -9,7 +9,7 @@
   "lang": "pl",
   "icons": [
     {
-      "src": "favicon.png",
+      "src": "/favicon.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
