@@ -120,12 +120,17 @@ function isPaid() {
 }
 
 function premiumAction(feature) {
+    // free users still get a beat picker (daily + one more) — full paywall
+    // gate only applies to features with no free tier at all
+    if (feature === 'beat') { openBeatPicker(); return; }
     if (isPaid()) {
-        if (feature === 'beat') openBeatPicker();
-        if (feature === 'ads')  alert(STRINGS.premiumAdsDisabledAlert);
+        if (feature === 'ads') alert(STRINGS.premiumAdsDisabledAlert);
         return;
     }
+    showPaywall(feature);
+}
 
+function showPaywall(feature) {
     currentPremiumAction = feature;
     window.umami?.track('paywall_shown', { feature });
     const f = PREMIUM_FEATURES[feature];
@@ -156,7 +161,7 @@ function paywallCtaClick() {
 
 function updatePremiumUI() {
     const paid = isPaid();
-    ['btnChangeBeat', 'btnNoAds'].forEach(id => {
+    ['btnChangeBeat'].forEach(id => {
         document.getElementById(id)?.classList.toggle('unlocked', paid);
     });
 }
@@ -252,23 +257,43 @@ function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
 // GAME
 // ══════════════════════════════════════════
 const THEMES = [
-    { bg: '#1e4d1a', border: '#3a8c32', text: '#7ee870' },
-    { bg: '#4d3a00', border: '#c49a00', text: '#f5c800' },
-    { bg: '#0e2e52', border: '#2a6bbf', text: '#70b0f0' },
+    { bg: '#132b0a', border: '#3f8f1a', text: '#7cdb4a' },
+    { bg: '#2a2a2a', border: '#767676', text: '#d4d4d4' },
 ];
 
-const CELL_H = 64, GAP = 8, ROW_H = CELL_H + GAP, AHEAD = 20;
+const CELL_W = 150, CELL_H = 64, GAP = 8, ROW_H = CELL_H + GAP, AHEAD = 20;
+const COUNTDOWN_SEC = 3; // also caps how long a beat's intro is skipped before start
 
 let allPairs = [], cells = [], rowCount = 0, pairIndex = 0, currentCell = 0;
-let stepTimer = null, running = false;
+let stepTimer = null, countdownTimer = null, running = false;
 let beatBpm = 100, firstBeat = 0, beatDurSec = 60 / 100;
 
 let libraryBeats = [], selectedBeat = null, dailyBeatId = null;
 
 const gridScroll = document.getElementById('gridScroll');
 const dot        = document.getElementById('dot');
+const ball       = document.getElementById('rapBall');
 const btn        = document.getElementById('btn');
 const audio      = document.getElementById('audio');
+const countdownOverlay = document.getElementById('countdownOverlay');
+const countdownNumber  = document.getElementById('countdownNumber');
+
+// tracks the active cell's column AND row — the row it lands above is
+// always slot 0 (very first row) or slot 1 thereafter, since updateScroll()
+// keeps the active row pinned to that position once scrolling starts
+function updateBall(cellIndex) {
+    const col      = cellIndex % 4;
+    const rowSlot  = Math.floor(cellIndex / 4) === 0 ? 0 : 1;
+    const hopDur   = Math.min(beatDurSec, 0.45);
+
+    ball.style.transitionDuration = hopDur + 's';
+    ball.style.left = (col * (CELL_W + GAP) + CELL_W / 2) + 'px';
+    ball.style.top  = (rowSlot * ROW_H) + 'px';
+    ball.classList.remove('idle');
+    ball.style.animation = 'none';
+    void ball.offsetWidth; // restart the bounce keyframe from 0%
+    ball.style.animation = `ballHop ${hopDur}s ease-in-out`;
+}
 
 async function loadBeat(infoPath, audioPath) {
     const info = await fetch(infoPath).then(r => r.json()).catch(() => null);
@@ -338,12 +363,22 @@ function openBeatPicker() {
 
 function renderBeatList() {
     const el = document.getElementById('beatList');
+    const upsell = document.getElementById('beatUpsell');
     if (libraryBeats.length === 0) {
         el.innerHTML = `<div class="beat-list-empty">${STRINGS.beatEmpty}</div>`;
+        upsell.classList.add('hidden');
         return;
     }
+    const paid = isPaid();
+    // free users see only the daily beat + one more, with an upsell to unlock the rest
+    let visibleBeats = libraryBeats;
+    if (!paid) {
+        const daily  = libraryBeats.find(b => b.id === dailyBeatId);
+        const second = libraryBeats.find(b => b.id !== dailyBeatId);
+        visibleBeats = [daily, second].filter(Boolean);
+    }
     el.innerHTML = '';
-    libraryBeats.forEach(beat => {
+    visibleBeats.forEach(beat => {
         const isSelected = selectedBeat?.id === beat.id;
         const isDaily    = beat.id === dailyBeatId;
         const item = document.createElement('div');
@@ -361,6 +396,7 @@ function renderBeatList() {
         item.onclick = () => selectLibraryBeat(beat);
         el.appendChild(item);
     });
+    upsell.classList.toggle('hidden', paid || libraryBeats.length <= visibleBeats.length);
 }
 
 async function selectLibraryBeat(beat) {
@@ -427,7 +463,7 @@ Promise.all([
 function randPair() { return allPairs[Math.floor(Math.random() * allPairs.length)]; }
 
 function appendPair() {
-    const pair = randPair(), theme = THEMES[pairIndex % 3];
+    const pair = randPair(), theme = THEMES[pairIndex % 2];
     pairIndex++;
     pair.forEach(word => {
         const rowEl = document.createElement('div');
@@ -497,6 +533,7 @@ function step() {
 
     cells[currentCell].classList.add('active');
     if (currentCell % 4 === 0) updateScroll();
+    updateBall(currentCell);
 
     dot.classList.remove('dim');
     setTimeout(() => dot.classList.add('dim'), 110);
@@ -522,13 +559,47 @@ function waitForFirstBeat() {
         : setTimeout(step, 0);
 }
 
+// Runs the countdown UI (3, 2, 1) on its own real-time clock while the beat
+// plays underneath, then hands off to onDone. Always takes COUNTDOWN_SEC,
+// regardless of the beat's own intro length (see toggleGame's seek).
+function startCountdown(onDone) {
+    let n = COUNTDOWN_SEC;
+    const renderTick = () => {
+        countdownNumber.textContent = n;
+        countdownNumber.classList.remove('pop');
+        void countdownNumber.offsetWidth; // restart the pop keyframe from 0%
+        countdownNumber.classList.add('pop');
+    };
+    countdownOverlay.classList.remove('hidden');
+    renderTick();
+    const tick = () => {
+        n--;
+        if (n > 0) {
+            renderTick();
+            countdownTimer = setTimeout(tick, 1000);
+        } else {
+            countdownOverlay.classList.add('hidden');
+            onDone();
+        }
+    };
+    countdownTimer = setTimeout(tick, 1000);
+}
+
+function cancelCountdown() {
+    clearTimeout(countdownTimer);
+    countdownOverlay.classList.add('hidden');
+}
+
 function stopAll() {
     clearTimeout(stepTimer);
+    cancelCountdown();
     running = false;
     audio.pause();
     audio.currentTime = 0;
     if (cells[currentCell - 1]) cells[currentCell - 1].classList.remove('active');
     dot.classList.add('dim');
+    ball.classList.add('idle');
+    ball.style.animation = 'none';
     btn.textContent = STRINGS.statusStart;
     btn.classList.remove('running');
     initGrid();
@@ -550,7 +621,10 @@ function toggleGame() {
     btn.textContent = STRINGS.statusStop;
     btn.classList.add('running');
     initGrid();
-    audio.currentTime = 0;
+    // skip straight to COUNTDOWN_SEC before the first beat so a long intro
+    // (e.g. 50s) never makes the player wait — audio still plays underneath
+    // the countdown, so short intros are heard in full as before
+    audio.currentTime = Math.max(0, firstBeat - COUNTDOWN_SEC);
     audio.play().catch(() => stopAll());
-    waitForFirstBeat();
+    startCountdown(waitForFirstBeat);
 }

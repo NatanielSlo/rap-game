@@ -65,10 +65,7 @@
         <div class="topbar-right">
             <div class="topbar-premium">
                 <button class="premium-btn" id="btnChangeBeat" onclick="premiumAction('beat')">
-                    <span class="lock">🔒</span> {{PREMIUM_BEAT_BTN}}
-                </button>
-                <button class="premium-btn" id="btnNoAds" onclick="premiumAction('ads')">
-                    <span class="lock">🔒</span> {{PREMIUM_ADS_BTN}}
+                    {{PREMIUM_BEAT_BTN}}
                 </button>
             </div>
             <span class="row-counter hidden" id="rowCounter"></span>
@@ -88,7 +85,14 @@
 
     <div class="viewport-wrap">
         <div class="viewport">
-            <div class="grid-scroll" id="gridScroll"></div>
+            <div class="grid-clip" id="gridClip">
+                <div class="grid-scroll" id="gridScroll"></div>
+            </div>
+            <div class="rap-ball idle" id="rapBall"></div>
+            <div class="countdown-overlay hidden" id="countdownOverlay">
+                <div class="countdown-ring"></div>
+                <div class="countdown-number" id="countdownNumber">3</div>
+            </div>
         </div>
     </div>
 
@@ -208,6 +212,10 @@
             <h2>{{BEATPICKER_TITLE}}</h2>
             <p>{{BEATPICKER_DESC}}</p>
             <div id="beatList" class="beat-list"></div>
+            <div class="beat-upsell hidden" id="beatUpsell">
+                <p class="beat-upsell-text">{{BEATPICKER_UPSELL_TEXT}}</p>
+                <button class="beat-upsell-cta" onclick="hideModal('modalBeatPicker'); showPaywall('beat')">{{PREMIUM_UNLOCK_CTA}}</button>
+            </div>
             <div class="modal-actions" style="margin-top:0.25rem">
                 <button class="btn-secondary" onclick="hideModal('modalBeatPicker')">{{BEATPICKER_CLOSE_BTN}}</button>
             </div>

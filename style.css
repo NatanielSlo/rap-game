@@ -160,9 +160,93 @@ h1 {
 .viewport {
     width: calc(4 * 150px + 3 * 8px);
     height: calc(6 * 64px + 5 * 8px);
+    position: relative;
+}
+.grid-clip {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     position: relative;
 }
+
+/* ─── BOUNCING BALL (śledzi aktywną kolumnę i wiersz siatki) ── */
+/* Child of .viewport, sibling of .grid-clip — never gets clipped, and
+   inherits the same mobile transform:scale() as the rest of the grid. */
+.rap-ball {
+    position: absolute;
+    top: 0; left: 0;
+    width: 18px; height: 18px;
+    margin-left: -9px;
+    margin-top: -34px; /* rests above the active row's top edge, with breathing room */
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #fff, var(--c-green-hi) 55%, var(--c-green) 100%);
+    box-shadow: 0 0 10px var(--c-green-hi);
+    z-index: 2;
+    transition: left 0.3s cubic-bezier(.42, 0, .2, 1), top 0.35s ease, opacity 0.25s ease;
+    animation: ballHop 0.3s ease-in-out;
+}
+.rap-ball.idle { opacity: 0; animation: none; }
+@keyframes ballHop {
+    0%   { transform: translateY(0) scale(1, 1); }
+    35%  { transform: translateY(-24px) scale(1.08, 0.9); }
+    100% { transform: translateY(0) scale(1, 1.06); }
+}
+
+/* ─── START COUNTDOWN ── */
+/* Same trick as .rap-ball: child of .viewport, unclipped, inherits mobile scale for free. */
+.countdown-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13, 13, 13, 0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 8px;
+    z-index: 5;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+}
+.countdown-overlay.hidden { opacity: 0; pointer-events: none; }
+
+.countdown-ring {
+    position: absolute;
+    width: 108px; height: 108px;
+    border-radius: 50%;
+    border: 3px solid rgba(126, 232, 112, 0.18);
+}
+.countdown-ring::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: var(--c-green-hi);
+    border-right-color: var(--c-green-hi);
+    animation: countdownSweep 1s linear infinite;
+}
+@keyframes countdownSweep {
+    to { transform: rotate(360deg); }
+}
+
+.countdown-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4.4rem;
+    line-height: 1;
+    color: var(--c-green-hi);
+    text-shadow: 0 0 28px rgba(126, 232, 112, 0.7);
+    letter-spacing: 2px;
+}
+.countdown-number.pop {
+    animation: countdownPop 1s cubic-bezier(.34, 1.56, .64, 1);
+}
+@keyframes countdownPop {
+    0%   { transform: scale(0.35); opacity: 0; }
+    35%  { transform: scale(1.2); opacity: 1; }
+    55%  { transform: scale(0.94); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
 .grid-scroll {
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -393,6 +477,32 @@ button:disabled { background: #222; color: #444; cursor: default; transform: non
     letter-spacing: 0.3px;
 }
 .beat-list-empty { color: #444; text-align: center; padding: 2rem; font-size: 0.85rem; }
+
+.beat-upsell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.9rem 1rem;
+    margin-top: 0.35rem;
+    background: rgba(196, 154, 0, 0.06);
+    border: 1px solid rgba(196, 154, 0, 0.3);
+    border-radius: var(--r);
+    text-align: center;
+}
+.beat-upsell.hidden { display: none; }
+.beat-upsell-text {
+    color: var(--c-gold-hi);
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+.beat-upsell-cta {
+    background: var(--c-gold) !important;
+    padding: 9px 26px !important;
+    font-size: 0.8rem !important;
+}
+.beat-upsell-cta:hover { background: var(--c-gold-hi) !important; color: #1a1400 !important; }
 
 /* ─── ANIMATIONS ────────────────────── */
 @keyframes fadeUp {

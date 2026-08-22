@@ -82,6 +82,7 @@
     "beatpicker_title": "🎵 Beat library",
     "beatpicker_desc": "A new beat is picked every day. You can also choose your own.",
     "beatpicker_close_btn": "Close",
+    "beatpicker_upsell_text": "Want more beats? Get Premium to unlock the full library.",
     "auth_register_title": "Sign up",
     "auth_register_subtitle": "Play without limits and track your progress.",
     "auth_register_submit": "Sign up",

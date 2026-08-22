@@ -137,10 +137,7 @@
         <div class="topbar-right">
             <div class="topbar-premium">
                 <button class="premium-btn" id="btnChangeBeat" onclick="premiumAction('beat')">
-                    <span class="lock">🔒</span> Beat wechseln
-                </button>
-                <button class="premium-btn" id="btnNoAds" onclick="premiumAction('ads')">
-                    <span class="lock">🔒</span> Werbung entfernen
+                    Beat wechseln
                 </button>
             </div>
             <span class="row-counter hidden" id="rowCounter"></span>
@@ -162,7 +159,14 @@
 
     <div class="viewport-wrap">
         <div class="viewport">
-            <div class="grid-scroll" id="gridScroll"></div>
+            <div class="grid-clip" id="gridClip">
+                <div class="grid-scroll" id="gridScroll"></div>
+            </div>
+            <div class="rap-ball idle" id="rapBall"></div>
+            <div class="countdown-overlay hidden" id="countdownOverlay">
+                <div class="countdown-ring"></div>
+                <div class="countdown-number" id="countdownNumber">3</div>
+            </div>
         </div>
     </div>
 
@@ -286,6 +290,10 @@
             <h2>🎵 Beat-Bibliothek</h2>
             <p>Jeden Tag wird ein neuer Beat ausgelost. Du kannst auch einen eigenen wählen.</p>
             <div id="beatList" class="beat-list"></div>
+            <div class="beat-upsell hidden" id="beatUpsell">
+                <p class="beat-upsell-text">Willst du mehr Beats? Hol dir Premium und schalte die ganze Bibliothek frei.</p>
+                <button class="beat-upsell-cta" onclick="hideModal('modalBeatPicker'); showPaywall('beat')">Für 4,99 € freischalten</button>
+            </div>
             <div class="modal-actions" style="margin-top:0.25rem">
                 <button class="btn-secondary" onclick="hideModal('modalBeatPicker')">Schließen</button>
             </div>
