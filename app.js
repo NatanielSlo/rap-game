@@ -258,7 +258,7 @@ function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
 // ══════════════════════════════════════════
 const THEMES = [
     { bg: '#132b0a', border: '#3f8f1a', text: '#7cdb4a' },
-    { bg: '#2a2a2a', border: '#767676', text: '#d4d4d4' },
+    { bg: '#0a1f2b', border: '#3a8fbf', text: '#7ecbe8' },
 ];
 
 const CELL_W = 150, CELL_H = 64, GAP = 8, ROW_H = CELL_H + GAP, AHEAD = 20;
